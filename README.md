@@ -1,7 +1,11 @@
 HA-PHP-DOCKER
 =
 
-This is a PHP friendly docker. You can create and configure any PHP stack project and as much as you want with only one build.
+This is a PHP friendly multi stack docker. 
+
+You can create and configure any PHP stack project.
+
+You can create as much project as you want with only one build.
 
 Ubuntu  
 Nginx  
