@@ -23,11 +23,11 @@ Symfony installer
 How to run project:
 =
 1- Create you `data/project_folder`.  
-2- Add `domain.conf` file into docker/nginx/  
-3- Into the `domain.conf` you must add a `server_name www.your-domain.xyz;`  
+2- Add `domain.conf` file under `docker/nginx/` folder.   
+3- Don't forget to add `server_name www.your-domain.xyz;` into your `domain.conf` file.     
 4- Add the `domain.conf` file path into docker-compose.yml under `webserver -> volumes`  
 5- Add your `www.your-domain.xyz` into you host file `127.0.0.1 www.your-domain.xyz`  
-6- Rebuild your docker under main folder `ha-php-docker` run `make docker-start`  
+6- Rebuild your docker: under main folder `ha-php-docker` run `make docker-start`  
 7- Under your web browser go to `www.your-domain.xyz` and enjoy! :)  
 8- To view container into web browser user `www.your-domain.xyz:[container_port]`  
 
