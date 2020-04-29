@@ -1,0 +1,95 @@
+prompt_command () {
+    if [ $? -eq 0 ]; then # set an error string for the prompt, if applicable
+        ERRPROMPT=""
+    else
+        ERRPROMPT='->($?) '
+    fi
+    if [ "\$(type -t __git_ps1)" ]; then # if we're in a Git repo, show current branch
+        BRANCH=`parse_git_branch`
+    fi
+    local TIME=`fmt_time` # format time for prompt string
+    local LOAD=`uptime|awk '{min=NF-2;print $min}'`
+    local GREEN="\[\033[0;32m\]"
+    local BGREEN="\[\033[1;32m\]"
+    local CYAN="\[\033[0;36m\]"
+    local BCYAN="\[\033[1;36m\]"
+    local BLUE="\[\033[0;34m\]"
+    local GRAY="\[\033[0;37m\]"
+    local DKGRAY="\[\033[1;30m\]"
+    local WHITE="\[\033[1;37m\]"
+    local RED="\[\033[0;31m\]"
+    local BRED="\[\033[1;31m\]"
+    local YELLOW="\[\033[0;93m\]"
+    # return color to Terminal setting for text color
+    local DEFAULT="\[\033[0;39m\]"
+    export PS1="${CYAN}\u${GREEN}@${CYAN}\
+\h${DKGRAY} ${RED}$ERRPROMPT${GRAY}\
+${GREEN}\w${BRED} ${BRANCH}${DEFAULT}\n$ "
+}
+PROMPT_COMMAND=prompt_command
+
+fmt_time () { #format time just the way I likes it
+    date +"%H:%M"|sed 's/ //g'
+}
+pwdtail () { #returns the last 2 fields of the working directory
+    pwd|awk -F/ '{nlast = NF -1;print $nlast"/"$NF}'
+}
+chkload () { #gets the current 1m avg CPU load
+    local CURRLOAD=`uptime|awk '{print $8}'`
+    if [ "$CURRLOAD" > "1" ]; then
+        local OUTP="HIGH"
+    elif [ "$CURRLOAD" < "1" ]; then
+        local OUTP="NORMAL"
+    else
+        local OUTP="UNKNOWN"
+    fi
+    echo $CURRLOAD
+}
+
+# get current branch in git repo
+function parse_git_branch() {
+	BRANCH=`git branch 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/\1/'`
+	if [ ! "${BRANCH}" == "" ]
+	then
+		STAT=`parse_git_dirty`
+		echo "[${BRANCH}${STAT}] "
+	else
+		echo ""
+	fi
+}
+
+# get current status of git repo
+function parse_git_dirty {
+	status=`git status 2>&1 | tee`
+	dirty=`echo -n "${status}" 2> /dev/null | grep -e "modified" -e "modifié" &> /dev/null; echo "$?"`
+	untracked=`echo -n "${status}" 2> /dev/null | grep -e "git add <file>" -e "git add <fichier>" &> /dev/null; echo "$?"`
+	ahead=`echo -n "${status}" 2> /dev/null | grep -e "Your branch is ahead of" -e "votre branche est en avance" &> /dev/null; echo "$?"`
+	newfile=`echo -n "${status}" 2> /dev/null | grep -e "new file" -e "nouveau fichier" &> /dev/null; echo "$?"`
+	renamed=`echo -n "${status}" 2> /dev/null | grep -e "rename" -e "renommé" &> /dev/null; echo "$?"`
+	deleted=`echo -n "${status}" 2> /dev/null | grep -e "deleted" -e "supprimé" &> /dev/null; echo "$?"`
+	bits=''
+	if [ "${renamed}" == "0" ]; then
+		bits=">${bits}"
+	fi
+	if [ "${ahead}" == "0" ]; then
+		bits="*${bits}"
+	fi
+	if [ "${newfile}" == "0" ]; then
+		bits="+${bits}"
+	fi
+	if [ "${untracked}" == "0" ]; then
+		bits="?${bits}"
+	fi
+	if [ "${deleted}" == "0" ]; then
+		bits="x${bits}"
+	fi
+	if [ "${dirty}" == "0" ]; then
+		bits="!${bits}"
+	fi
+	if [ ! "${bits}" == "" ]; then
+		echo " ${bits}"
+	else
+		echo ""
+	fi
+}
+

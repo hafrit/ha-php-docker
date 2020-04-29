@@ -1,0 +1,1 @@
+don't forget to update sf4.conf and docker-compose.yml files

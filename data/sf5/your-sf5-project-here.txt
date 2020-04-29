@@ -1,0 +1,1 @@
+don't forget to update sf5.conf and docker-compose.yml files

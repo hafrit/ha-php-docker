@@ -1,0 +1,170 @@
+version: "3.7"
+
+services:
+
+  php-fpm:
+    build: docker/php-fpm
+    container_name: php-fpm
+    restart: on-failure
+    working_dir: /var/www
+    environment:
+      TZ: "Europe/Paris"
+      PHP_IDE_CONFIG: "serverName=HA-SERVER"
+      XDEBUG_CONFIG: "idekey=PHPSTORM remote_enable=1 remote_host=ha.docker-ip.for.xdebug.internal"
+      # add to /etc/hosts [YOUR_IP] ha.docker-ip.for.xdebug.internal to have xdebug working
+    volumes:
+      - ./data:/var/www
+    networks:
+      - elastic
+
+  webserver:
+    image: nginx:alpine
+    container_name: webserver
+    restart: on-failure
+    working_dir: /var/www
+    volumes:
+      - ./data:/var/www
+      - ./docker/nginx/sf3.conf:/etc/nginx/conf.d/sf3.conf
+      - ./docker/nginx/sf4.conf:/etc/nginx/conf.d/sf4.conf
+      - ./docker/nginx/sf5.conf:/etc/nginx/conf.d/sf5.conf
+    ports:
+      - "80:80"
+    networks:
+      - elastic
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: on-failure
+    working_dir: /var/www
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: ha_dev
+    networks:
+      - elastic
+
+  postgresql:
+    image: postgres:12-alpine
+    container_name: postgresql
+    restart: on-failure
+    working_dir: /var/www
+    volumes:
+      - .:/var/www
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: ha_dev
+    ports:
+      - "5432:5432"
+    networks:
+      - elastic
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: on-failure
+    links:
+      - "mysql:mysql"
+    environment:
+      TZ: "Europe/Paris"
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+    ports:
+      - "81:80"
+    networks:
+      - elastic
+
+  phppgadmin:
+    image: dockage/phppgadmin:latest
+    container_name: phppgadmin
+    restart: on-failure
+    links:
+      - "postgresql:postgresql"
+    environment:
+      PHP_PG_ADMIN_SERVER_HOST: phppgadmin
+      PHP_PG_ADMIN_SERVER_PORT: 5432
+      PHP_PG_ADMIN_SERVER_DEFAULT_DB: ha_dev
+      PHP_PG_ADMIN_AUTO_COMPLETE: default on
+    ports:
+      - "82:80"
+    networks:
+      - elastic
+
+  adminer:
+    image: adminer
+    container_name: adminer
+    restart: on-failure
+    environment:
+      TZ: "Europe/Paris"
+    links:
+      - "postgresql:postgresql"
+      - "mysql:mysql"
+    ports:
+      - "83:8080"
+    networks:
+      - elastic
+
+  elasticsearch-head:
+    container_name: elasticsearch-head
+    depends_on:
+      - elasticsearch
+    image: tobias74/elasticsearch-head:6
+    ports:
+      - "9100:9100"
+    networks:
+      - elastic
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.6.2
+    container_name: elasticsearch
+    environment:
+      - "node.name=elasticsearch"
+      - "cluster.name=es-docker-cluster"
+      - "cluster.initial_master_nodes=elasticsearch"
+      - "bootstrap.memory_lock=true"
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+    ports:
+      - "9200:9200"
+    networks:
+      - elastic
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.6.2
+    container_name: kibana
+    ports:
+      - "5601:5601"
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    networks:
+      - elastic
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.6.2
+    container_name: logstash
+    environment:
+      ELASTICSEARCH_URL: http://elasticsearch:9200
+      ELASTICSEARCH_HOSTS: http://elasticsearch:9200
+    ports:
+      - "5044:5044"
+    depends_on:
+      - elasticsearch
+      - kibana
+    networks:
+      - elastic
+
+volumes:
+  data01:
+    driver: local
+
+networks:
+  elastic:
+    driver: bridge
