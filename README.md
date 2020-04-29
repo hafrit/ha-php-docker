@@ -32,9 +32,8 @@ How to run project:
 7- Under your web browser go to `www.your-domain.xyz` and enjoy! :)  
 8- To view container into web browser user `www.your-domain.xyz:[container_port]`  
 
-This docker is comming with Symfony 3 / 4 / 5 projects folder examples.  
-To work with this examples add into your host file  
-`127.0.0.1 dev.sf3.local dev.sf4.local dev.sf5.local` 
+This docker is coming with Symfony 3 / 4 / 5 projects folder examples.  
+To work with this examples add into your host file `127.0.0.1 dev.sf3.local dev.sf4.local dev.sf5.local`  
 
 Good job !
 
