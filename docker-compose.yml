@@ -61,6 +61,16 @@ services:
     networks:
       - elastic
 
+  mongo:
+    image: mongo:latest
+    container_name: mongo
+    restart: on-failure
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: admin
+    networks:
+      - elastic
+
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin

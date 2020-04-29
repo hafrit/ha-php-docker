@@ -8,6 +8,7 @@ Nginx
 Php-fpm7.4  
 MySQL 8.0  
 PostgreSQL 12  
+Mongo  
 Elasticsearch 7.6.2  
 Kibana 7.6.2  
 Logstash 7.6.2  

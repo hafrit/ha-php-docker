@@ -36,6 +36,7 @@ RUN apt-get update \
         php7.4-fpm \
         php-pear \
         php7.4-dev \
+        php7.4-mongodb \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /usr/share/doc/* ~/.composer
 
